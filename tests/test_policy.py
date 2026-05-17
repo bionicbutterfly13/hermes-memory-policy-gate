@@ -1,0 +1,28 @@
+import unittest
+
+from hermes_memory_policy_gate import TargetTier, decide_memory_policy
+
+
+class PolicyTests(unittest.TestCase):
+    def test_noise_routes_to_session_search_only(self):
+        decision = decide_memory_policy({"text": "yeah ok"})
+        self.assertEqual(decision.tier, TargetTier.SESSION_SEARCH_ONLY)
+        self.assertFalse(decision.would_mutate)
+        self.assertTrue(decision.dry_run)
+
+    def test_clean_field_blocks_unapproved_source(self):
+        decision = decide_memory_policy({"text": "Old campaign detail for Quill marketing."})
+        self.assertEqual(decision.tier, TargetTier.NO_WRITE_CLEAN_FIELD_BOUNDARY)
+        self.assertTrue(decision.approval_required)
+
+    def test_user_preference_routes_to_user_memory(self):
+        decision = decide_memory_policy({"text": "I prefer concise status reports."})
+        self.assertEqual(decision.tier, TargetTier.USER_MEMORY)
+
+    def test_reusable_workflow_routes_to_skill_patch(self):
+        decision = decide_memory_policy({"text": "Reusable procedure for plugin release checks."})
+        self.assertEqual(decision.tier, TargetTier.SKILL_PATCH)
+
+
+if __name__ == "__main__":
+    unittest.main()

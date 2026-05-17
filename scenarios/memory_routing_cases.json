@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "name": "conversational acknowledgement is not durable memory",
+      "request": {
+        "text": "yeah ok",
+        "source": "chat"
+      },
+      "expected_tier": "session_search_only"
+    },
+    {
+      "name": "durable user preference routes to user memory",
+      "request": {
+        "text": "I prefer concise approvals and blockers instead of long dumps.",
+        "source": "chat"
+      },
+      "expected_tier": "user_memory"
+    },
+    {
+      "name": "reusable procedure routes to skill patch",
+      "request": {
+        "text": "This is a reusable workflow checklist for memory routing.",
+        "source": "session"
+      },
+      "expected_tier": "skill_patch"
+    },
+    {
+      "name": "clean field unapproved marketing source blocks writes",
+      "request": {
+        "text": "Use this old campaign detail for Quill marketing memory.",
+        "source": "floating memory"
+      },
+      "expected_tier": "no_write_clean_field_boundary"
+    },
+    {
+      "name": "active lane state routes to Mnemosyne session",
+      "request": {
+        "text": "Active lane is Hermes plugin productization; source of truth is PLAN.md.",
+        "source": "control-plane"
+      },
+      "expected_tier": "mnemosyne_session"
+    },
+    {
+      "name": "project artifact stays near repo",
+      "request": {
+        "text": "Update README and pyproject.toml in the project repo.",
+        "source": "task"
+      },
+      "expected_tier": "project_artifact"
+    },
+    {
+      "name": "superseding correction requires update path",
+      "request": {
+        "text": "Correction: HBD is not the machine; it is an offer instance.",
+        "source": "chat"
+      },
+      "expected_tier": "superseded_update"
+    },
+    {
+      "name": "noisy memory invalidation is gated",
+      "request": {
+        "text": "Remove noisy memory about assistant summaries.",
+        "source": "audit",
+        "metadata": {
+          "operation": "invalidate"
+        }
+      },
+      "expected_tier": "noisy_memory_invalidation"
+    },
+    {
+      "name": "global operating rule routes to Mnemosyne global",
+      "request": {
+        "text": "This is a durable cross-session operating rule for Archimedes.",
+        "source": "control-plane"
+      },
+      "expected_tier": "mnemosyne_global"
+    }
+  ]
+}

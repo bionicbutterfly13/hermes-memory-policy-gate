@@ -1,0 +1,41 @@
+[build-system]
+requires = ["hatchling>=1.21"]
+build-backend = "hatchling.build"
+
+[project]
+name = "hermes-memory-policy-gate"
+version = "0.1.0"
+description = "Dry-run memory policy gate for Hermes Agent"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [
+  { name = "Mani Saint-Victor, MD / bionicbutterfly13" }
+]
+keywords = ["hermes-agent", "memory", "policy", "plugin", "mnemosyne", "memskill"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+hmpg = "hermes_memory_policy_gate.evaluator:main"
+
+[project.entry-points."hermes_agent.plugins"]
+hermes-memory-policy-gate = "hermes_memory_policy_gate.plugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hermes_memory_policy_gate"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

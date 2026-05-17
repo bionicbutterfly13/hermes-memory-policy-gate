@@ -1,0 +1,10 @@
+manifest_version: 1
+name: hermes-memory-policy-gate
+kind: standalone
+version: 0.1.0
+description: Dry-run MemSkill-inspired memory policy gate for Hermes Agent.
+author: Mani Saint-Victor, MD / bionicbutterfly13
+provides_tools:
+  - memory_policy_gate
+provides_hooks: []
+requires_env: []
