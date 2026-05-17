@@ -2,11 +2,12 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 Lane: Hermes/Archimedes memory hygiene plugin
-Status: local scaffold + shadow-mode MVP only
+Status: GitHub-published dry-run/shadow-mode MVP; local source clone is the active implementation workspace
 
 ## Source of truth
 
-- Local project root: `/Volumes/Asylum/dev/hermes-memory-policy-gate`
+- Active local source clone: `/Users/manisaintvictor/.hermes/plugins/hermes-memory-policy-gate`
+- GitHub remote: `https://github.com/bionicbutterfly13/hermes-memory-policy-gate.git`
 - Hermes plugin contract verified from local Hermes source:
   - directory plugins need root `plugin.yaml` and root `__init__.py` with `register(ctx)`
   - `hermes plugins install owner/repo` clones the GitHub repo into `~/.hermes/plugins/<manifest name>`
@@ -21,7 +22,7 @@ Build a GitHub-installable Hermes plugin and PyPI-ready Python package that clas
 
 This project takes precedence as the Hermes memory-policy implementation lane. MemSkill is an architectural influence and possible future optional backend, not a phase-1 runtime dependency. The core package must stay installable with `dependencies = []` until the plugin API and evaluator stabilize.
 
-## Phase 1 scope — current scaffold
+## Phase 1 scope — current plugin
 
 - Root Hermes plugin manifest: `plugin.yaml`
 - Root plugin loader: `__init__.py`
@@ -67,21 +68,21 @@ Allowed tiers:
 - No project-file mutation outside this repo
 - No credentials/config/provider/gateway changes
 - No hard MemSkill dependency
-- No GitHub publication until approved
+- No GitHub push, release, or publication update until approved
 - No PyPI publication until plugin API and evaluator stabilize
 
-## Acceptance gate before GitHub publication
+## Acceptance gate before push/release
 
-- `python -m compileall src tests __init__.py`
-- `python -m pytest -q` or `python -m unittest discover -s tests`
-- `python -m hermes_memory_policy_gate.evaluator scenarios/memory_routing_cases.json --json`
+- `PYTHONPATH=src python3 -m compileall -q src tests __init__.py`
+- `PYTHONPATH=src python3 -m pytest tests -q` or `PYTHONPATH=src python3 -m unittest discover -s tests`
+- `PYTHONPATH=src python3 -m hermes_memory_policy_gate scenarios/memory_routing_cases.json --json`
 - local `git status --short` reviewed
-- Dr. Mani approves GitHub repo creation/publication
+- Dr. Mani approves the remote push/release action
 
 ## Next implementation phase
 
 1. Add more scenario coverage from real Hermes/Archimedes memory-routing failures.
 2. Add optional JSONL audit log output, still local-only and opt-in.
-3. Add install smoke against a disposable `HERMES_HOME`.
-4. Add `hermes plugins install bionicbutterfly13/hermes-memory-policy-gate` docs after GitHub repo exists.
-5. Only after stable GitHub plugin behavior: decide whether to publish PyPI package.
+3. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
+4. Keep GitHub install docs current with the plugin manifest and CLI behavior.
+5. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.

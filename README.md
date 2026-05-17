@@ -8,7 +8,7 @@ It does not store memory. It decides where a proposed memory write *should* go a
 
 ## Status
 
-Phase 1: shadow/dry-run only.
+Phase 1: GitHub-installable shadow/dry-run plugin.
 
 This plugin does not mutate Hermes core, credentials, providers, gateway, config, Mnemosyne, skills, or existing memory.
 
@@ -20,7 +20,7 @@ Phase 1 keeps `dependencies = []` so the Hermes plugin remains lightweight and G
 
 ## Primary install target
 
-After this repo is published to GitHub:
+Install from GitHub:
 
 ```bash
 hermes plugins install bionicbutterfly13/hermes-memory-policy-gate
@@ -62,20 +62,20 @@ The tool accepts text/context/source/metadata and returns a JSON decision.
 ## Local evaluator
 
 ```bash
-python -m hermes_memory_policy_gate.evaluator scenarios/memory_routing_cases.json --json
+PYTHONPATH=src python3 -m hermes_memory_policy_gate scenarios/memory_routing_cases.json --json
 ```
 
 ## Development
 
 ```bash
-python -m compileall src tests __init__.py
-python -m unittest discover -s tests
+PYTHONPATH=src python3 -m compileall -q src tests __init__.py
+PYTHONPATH=src python3 -m unittest discover -s tests
 ```
 
 Optional after installing dev extras:
 
 ```bash
-python -m pytest -q
+PYTHONPATH=src python3 -m pytest tests -q
 ```
 
 ## Safety model
