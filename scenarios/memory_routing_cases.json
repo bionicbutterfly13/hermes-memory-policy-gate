@@ -68,6 +68,14 @@
       "expected_tier": "noisy_memory_invalidation"
     },
     {
+      "name": "completed task progress is not durable memory",
+      "request": {
+        "text": "Fixed bug X, submitted PR #123, and completed Phase 4 today.",
+        "source": "assistant_session_summary"
+      },
+      "expected_tier": "session_search_only"
+    },
+    {
       "name": "global operating rule routes to Mnemosyne global",
       "request": {
         "text": "This is a durable cross-session operating rule for Archimedes.",

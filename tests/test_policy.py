@@ -23,6 +23,12 @@ class PolicyTests(unittest.TestCase):
         decision = decide_memory_policy({"text": "Reusable procedure for plugin release checks."})
         self.assertEqual(decision.tier, TargetTier.SKILL_PATCH)
 
+    def test_completed_task_progress_routes_to_session_search_only(self):
+        decision = decide_memory_policy({"text": "Fixed bug X, submitted PR #123, and completed Phase 4 today."})
+        self.assertEqual(decision.tier, TargetTier.SESSION_SEARCH_ONLY)
+        self.assertIn("ephemeral_task_progress", decision.reason_codes)
+        self.assertFalse(decision.would_mutate)
+
 
 if __name__ == "__main__":
     unittest.main()

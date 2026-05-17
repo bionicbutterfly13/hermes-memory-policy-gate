@@ -153,6 +153,34 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
             notes=["Lane state should not pollute global durable memory."],
         )
 
+    if _contains_any(blob, [
+        "fixed bug",
+        "bug fixed",
+        "submitted pr",
+        "opened pr",
+        "merged pr",
+        "pr #",
+        "pull request",
+        "closed issue",
+        "completed phase",
+        "phase done",
+        "task done",
+        "completed task",
+        "finished task",
+    ]):
+        return MemoryPolicyDecision(
+            tier=TargetTier.SESSION_SEARCH_ONLY,
+            confidence=0.87,
+            reason_codes=[rc.EPHEMERAL_TASK_PROGRESS],
+            source=source,
+            provenance=provenance,
+            approval_required=False,
+            verification_step="Do not write completed task logs to durable memory; use transcript/session_search unless explicitly promoted to a project artifact.",
+            dry_run=True,
+            would_mutate=False,
+            notes=["Completed work logs and PR/phase updates are stale quickly."],
+        )
+
     if _contains_any(blob, ["/volumes/", "repo", "project", "file path", "artifact", "plan.md", "readme", "pyproject.toml"]):
         return MemoryPolicyDecision(
             tier=TargetTier.PROJECT_ARTIFACT,
