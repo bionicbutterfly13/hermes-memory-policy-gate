@@ -2,13 +2,15 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 
-`hermes-memory-policy-gate` is a MemSkill-inspired, dry-run memory policy gate for Hermes Agent.
+`hermes-memory-policy-gate` is a MemSkill-inspired memory policy gate for Hermes Agent.
 
 It does not store memory. It decides where a proposed memory write *should* go and returns an auditable decision.
 
 ## Status
 
-Phase 1: GitHub-installable shadow/dry-run plugin.
+GitHub-installable plugin with narrow `session_search_only` no-write enforcement.
+
+The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. All other tiers remain advisory/dry-run until separately approved.
 
 This plugin does not mutate Hermes core, credentials, providers, gateway, config, Mnemosyne, skills, or existing memory.
 
@@ -16,7 +18,7 @@ This plugin does not mutate Hermes core, credentials, providers, gateway, config
 
 This project is MemSkill-inspired, not MemSkill-dependent.
 
-Phase 1 keeps `dependencies = []` so the Hermes plugin remains lightweight and GitHub-installable. MemSkill may become an optional backend later, behind the same auditable decision schema, after the plugin API and offline evaluator stabilize.
+The plugin keeps `dependencies = []` so it remains lightweight and GitHub-installable. MemSkill may become an optional backend later, behind the same auditable decision schema, after the plugin API and offline evaluator stabilize.
 
 ## Primary install target
 
@@ -82,4 +84,4 @@ PYTHONPATH=src python3 -m pytest tests -q
 
 This is an evaluator and router. It is not a writer.
 
-All output is advisory until a future explicitly approved integration phase wires decisions into live Hermes write paths.
+`session_search_only` decisions can enforce a no-write block when `dry_run=false`; that enforcement is a returned decision contract, not a writer. Every other tier remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.

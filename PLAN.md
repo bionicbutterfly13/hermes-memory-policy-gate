@@ -2,7 +2,7 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 Lane: Hermes/Archimedes memory hygiene plugin
-Status: GitHub-published dry-run/shadow-mode MVP; local source clone is the active implementation workspace
+Status: GitHub-published plugin with narrow `session_search_only` no-write enforcement; local source clone is the active implementation workspace
 
 ## Source of truth
 
@@ -16,18 +16,19 @@ Status: GitHub-published dry-run/shadow-mode MVP; local source clone is the acti
 
 ## Objective
 
-Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. Phase 1 is dry-run/shadow mode only. It returns auditable routing decisions and never writes to Hermes memory, Mnemosyne, config, providers, gateway, or project files.
+Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, or project files.
 
 ## MemSkill stance
 
 This project takes precedence as the Hermes memory-policy implementation lane. MemSkill is an architectural influence and possible future optional backend, not a phase-1 runtime dependency. The core package must stay installable with `dependencies = []` until the plugin API and evaluator stabilize.
 
-## Phase 1 scope — current plugin
+## Current plugin scope
 
 - Root Hermes plugin manifest: `plugin.yaml`
 - Root plugin loader: `__init__.py`
 - Python package under `src/hermes_memory_policy_gate/`
 - Deterministic policy engine
+- Narrow no-write enforcement contract for `session_search_only`
 - Offline evaluator against canned scenarios
 - Tests for policy routing, evaluator, manifest, and plugin registration shape
 - README, license, after-install note, CI scaffold
@@ -45,6 +46,9 @@ Every decision returns:
 - `verification_step`
 - `dry_run`
 - `would_mutate`
+- `blocked`
+- `enforced`
+- `enforcement_action`
 - `notes`
 
 Allowed tiers:
@@ -59,10 +63,10 @@ Allowed tiers:
 - `superseded_update`
 - `noisy_memory_invalidation`
 
-## Forbidden in phase 1
+## Forbidden without separate approval
 
 - No Hermes core mutation
-- No live memory writes
+- No live memory writes; `session_search_only` enforcement is a returned block decision only
 - No Mnemosyne writes/invalidations
 - No skill patching
 - No project-file mutation outside this repo
@@ -84,5 +88,6 @@ Allowed tiers:
 1. Add more scenario coverage from real Hermes/Archimedes memory-routing failures.
 2. Add optional JSONL audit log output, still local-only and opt-in.
 3. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
-4. Keep GitHub install docs current with the plugin manifest and CLI behavior.
-5. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.
+4. Reload or restart Hermes only after explicit approval if live tool surfaces must pick up the new schema.
+5. Keep GitHub install docs current with the plugin manifest and CLI behavior.
+6. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.
