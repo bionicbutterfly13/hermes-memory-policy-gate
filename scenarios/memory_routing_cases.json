@@ -76,6 +76,36 @@
       "expected_tier": "session_search_only"
     },
     {
+      "name": "user memory write attempt blocks ephemeral task progress",
+      "request": {
+        "text": "Remember that I submitted PR #123 and completed Phase 4 today.",
+        "source": "assistant_session_summary",
+        "dry_run": false,
+        "metadata": {
+          "requested_tier": "user_memory"
+        }
+      },
+      "expected_tier": "session_search_only",
+      "expected_blocked": true,
+      "expected_enforced": true,
+      "expected_enforcement_action": "block_user_memory_write"
+    },
+    {
+      "name": "durable user preference remains advisory for user memory write attempt",
+      "request": {
+        "text": "I prefer concise approvals and blockers instead of long dumps.",
+        "source": "chat",
+        "dry_run": false,
+        "metadata": {
+          "requested_tier": "user_memory"
+        }
+      },
+      "expected_tier": "user_memory",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only"
+    },
+    {
       "name": "global operating rule routes to Mnemosyne global",
       "request": {
         "text": "This is a durable cross-session operating rule for Archimedes.",

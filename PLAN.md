@@ -2,7 +2,7 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 Lane: Hermes/Archimedes memory hygiene plugin
-Status: GitHub-published plugin with narrow `session_search_only` no-write enforcement; local source clone is the active implementation workspace
+Status: GitHub-published plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts; local source clone is the active implementation workspace
 
 ## Source of truth
 
@@ -16,7 +16,7 @@ Status: GitHub-published plugin with narrow `session_search_only` no-write enfor
 
 ## Objective
 
-Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, or project files.
+Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, blocks attempts to force stale task-progress content into `user_memory`, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, or project files.
 
 ## MemSkill stance
 
@@ -29,6 +29,7 @@ This project takes precedence as the Hermes memory-policy implementation lane. M
 - Python package under `src/hermes_memory_policy_gate/`
 - Deterministic policy engine
 - Narrow no-write enforcement contract for `session_search_only`
+- Narrow user-memory boundary contract for stale task-progress write attempts
 - Offline evaluator against canned scenarios
 - Tests for policy routing, evaluator, manifest, and plugin registration shape
 - README, license, after-install note, CI scaffold
@@ -66,7 +67,7 @@ Allowed tiers:
 ## Forbidden without separate approval
 
 - No Hermes core mutation
-- No live memory writes; `session_search_only` enforcement is a returned block decision only
+- No live memory writes; `session_search_only` and user-memory boundary enforcement are returned block decisions only
 - No Mnemosyne writes/invalidations
 - No skill patching
 - No project-file mutation outside this repo

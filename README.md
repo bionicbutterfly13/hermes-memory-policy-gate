@@ -8,9 +8,9 @@ It does not store memory. It decides where a proposed memory write *should* go a
 
 ## Status
 
-GitHub-installable plugin with narrow `session_search_only` no-write enforcement.
+GitHub-installable plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts.
 
-The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. All other tiers remain advisory/dry-run until separately approved.
+The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. It also blocks attempts to force stale PR, issue, phase, or completed-task logs into `user_memory`. Durable user preferences remain advisory and non-writing. All other tiers remain advisory/dry-run until separately approved.
 
 This plugin does not mutate Hermes core, credentials, providers, gateway, config, Mnemosyne, skills, or existing memory.
 
@@ -67,6 +67,8 @@ The tool accepts text/context/source/metadata and returns a JSON decision.
 PYTHONPATH=src python3 -m hermes_memory_policy_gate scenarios/memory_routing_cases.json --json
 ```
 
+The seed scenarios include non-dry-run returned-block cases, so `dry_run_only=false` is expected; `live_writes=false` must remain true.
+
 ## Development
 
 ```bash
@@ -84,4 +86,4 @@ PYTHONPATH=src python3 -m pytest tests -q
 
 This is an evaluator and router. It is not a writer.
 
-`session_search_only` decisions can enforce a no-write block when `dry_run=false`; that enforcement is a returned decision contract, not a writer. Every other tier remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.
+`session_search_only` decisions can enforce a no-write block when `dry_run=false`; user-memory boundary attempts can return `block_user_memory_write` when stale task-progress content is being forced into `user_memory`. Both are returned decision contracts, not writers. Every other tier remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.

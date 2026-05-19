@@ -15,10 +15,21 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
     cases = data.get("cases", data if isinstance(data, list) else [])
     results = []
     passed = 0
+    dry_run_only = True
     for case in cases:
         decision = decide_memory_policy(case.get("request", case)).to_dict()
+        dry_run_only = dry_run_only and bool(decision["dry_run"])
         expected = case.get("expected_tier")
-        ok = decision["tier"] == expected
+        checks = {"tier": decision["tier"] == expected}
+        optional_expectations = {
+            "blocked": "expected_blocked",
+            "enforced": "expected_enforced",
+            "enforcement_action": "expected_enforcement_action",
+        }
+        for field, expected_key in optional_expectations.items():
+            if expected_key in case:
+                checks[field] = decision[field] == case[expected_key]
+        ok = all(checks.values())
         passed += int(ok)
         results.append({
             "name": case.get("name", "unnamed"),
@@ -27,6 +38,12 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
             "actual_tier": decision["tier"],
             "confidence": decision["confidence"],
             "reason_codes": decision["reason_codes"],
+            "dry_run": decision["dry_run"],
+            "would_mutate": decision["would_mutate"],
+            "blocked": decision["blocked"],
+            "enforced": decision["enforced"],
+            "enforcement_action": decision["enforcement_action"],
+            "checks": checks,
         })
     return {
         "scenario_file": str(scenario_path),
@@ -35,7 +52,7 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
         "total": len(results),
         "results": results,
         "live_writes": False,
-        "dry_run_only": True,
+        "dry_run_only": dry_run_only,
     }
 
 

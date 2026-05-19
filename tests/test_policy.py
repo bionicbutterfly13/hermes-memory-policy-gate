@@ -53,6 +53,32 @@ class PolicyTests(unittest.TestCase):
         self.assertFalse(decision.enforced)
         self.assertEqual(decision.enforcement_action, "advisory_only")
 
+    def test_user_memory_write_attempt_blocks_ephemeral_task_progress(self):
+        decision = decide_memory_policy({
+            "text": "Remember that I submitted PR #123 and completed Phase 4 today.",
+            "dry_run": False,
+            "metadata": {"requested_tier": "user_memory"},
+        })
+        self.assertEqual(decision.tier, TargetTier.SESSION_SEARCH_ONLY)
+        self.assertIn("ephemeral_task_progress", decision.reason_codes)
+        self.assertFalse(decision.dry_run)
+        self.assertFalse(decision.would_mutate)
+        self.assertTrue(decision.blocked)
+        self.assertTrue(decision.enforced)
+        self.assertEqual(decision.enforcement_action, "block_user_memory_write")
+
+    def test_durable_user_preference_stays_advisory_for_user_memory_write_attempt(self):
+        decision = decide_memory_policy({
+            "text": "I prefer concise status reports.",
+            "dry_run": False,
+            "metadata": {"requested_tier": "user_memory"},
+        })
+        self.assertEqual(decision.tier, TargetTier.USER_MEMORY)
+        self.assertFalse(decision.would_mutate)
+        self.assertFalse(decision.blocked)
+        self.assertFalse(decision.enforced)
+        self.assertEqual(decision.enforcement_action, "advisory_only")
+
 
 if __name__ == "__main__":
     unittest.main()

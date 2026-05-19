@@ -12,6 +12,22 @@ _NOISE_PATTERNS = [
     r"^\s*(lol|haha|hmm|uh|um)\s*$",
 ]
 
+_EPHEMERAL_TASK_PROGRESS_TERMS = [
+    "fixed bug",
+    "bug fixed",
+    "submitted pr",
+    "opened pr",
+    "merged pr",
+    "pr #",
+    "pull request",
+    "closed issue",
+    "completed phase",
+    "phase done",
+    "task done",
+    "completed task",
+    "finished task",
+]
+
 
 def _contains_any(blob: str, needles: list[str]) -> bool:
     blob_l = blob.lower()
@@ -20,6 +36,14 @@ def _contains_any(blob: str, needles: list[str]) -> bool:
 
 def _is_noise(text: str) -> bool:
     return any(re.match(pat, text, flags=re.IGNORECASE) for pat in _NOISE_PATTERNS)
+
+
+def _is_user_memory_write_attempt(request: MemoryPolicyRequest) -> bool:
+    target = " ".join(
+        str(request.metadata.get(key, ""))
+        for key in ("requested_tier", "target_tier", "tier", "candidate_tier", "candidate_action")
+    ).lower()
+    return "user_memory" in target or "user memory" in target
 
 
 def _session_search_decision(
@@ -31,6 +55,7 @@ def _session_search_decision(
     provenance: str,
     verification_step: str,
     notes: list[str],
+    enforcement_action: str = "block_durable_write",
 ) -> MemoryPolicyDecision:
     """Return the only phase-2 enforced decision: block durable writes.
 
@@ -56,7 +81,7 @@ def _session_search_decision(
         would_mutate=False,
         blocked=enforce,
         enforced=enforce,
-        enforcement_action="block_durable_write" if enforce else "advisory_only",
+        enforcement_action=enforcement_action if enforce else "advisory_only",
         notes=notes,
     )
 
@@ -117,6 +142,18 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
             dry_run=True,
             would_mutate=False,
             notes=["Prefer invalidation/supersession over hard deletion."],
+        )
+
+    if _is_user_memory_write_attempt(request) and _contains_any(blob, _EPHEMERAL_TASK_PROGRESS_TERMS):
+        return _session_search_decision(
+            request,
+            confidence=0.88,
+            reason_codes=[rc.EPHEMERAL_TASK_PROGRESS],
+            source=source,
+            provenance=provenance,
+            verification_step="Block user_memory write for ephemeral task progress; transcript/session_search is sufficient.",
+            notes=["User memory must not store stale PR, issue, phase, or completed-task logs."],
+            enforcement_action="block_user_memory_write",
         )
 
     if _contains_any(blob, ["i prefer", "my preference", "remember that i", "don't make me", "do not make me", "call me", "dr. mani wants"]):
@@ -186,21 +223,7 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
             notes=["Lane state should not pollute global durable memory."],
         )
 
-    if _contains_any(blob, [
-        "fixed bug",
-        "bug fixed",
-        "submitted pr",
-        "opened pr",
-        "merged pr",
-        "pr #",
-        "pull request",
-        "closed issue",
-        "completed phase",
-        "phase done",
-        "task done",
-        "completed task",
-        "finished task",
-    ]):
+    if _contains_any(blob, _EPHEMERAL_TASK_PROGRESS_TERMS):
         return _session_search_decision(
             request,
             confidence=0.87,
