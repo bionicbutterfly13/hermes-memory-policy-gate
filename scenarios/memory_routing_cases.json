@@ -112,6 +112,163 @@
         "source": "control-plane"
       },
       "expected_tier": "mnemosyne_global"
+    },
+    {
+      "name": "phase4 live user preference write intent stays advisory",
+      "live_write_intent": true,
+      "request": {
+        "text": "I prefer concise status reports.",
+        "source": "memory_tool",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "tools.memory_tool.memory_tool",
+          "write_path": "builtin_memory_tool",
+          "requested_tier": "user_memory",
+          "action": "add",
+          "target": "user"
+        }
+      },
+      "expected_tier": "user_memory",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
+    },
+    {
+      "name": "phase4 mnemosyne global write intent stays advisory",
+      "live_write_intent": true,
+      "request": {
+        "text": "This is a durable cross-session operating rule for Archimedes.",
+        "source": "memory_provider",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "agent.memory_manager.sync_all",
+          "write_path": "memory_provider_sync_turn",
+          "requested_tier": "mnemosyne_global"
+        }
+      },
+      "expected_tier": "mnemosyne_global",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
+    },
+    {
+      "name": "phase4 mnemosyne session write intent stays advisory",
+      "live_write_intent": true,
+      "request": {
+        "text": "Active lane is Hermes plugin productization; source of truth is PLAN.md.",
+        "source": "memory_provider",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "agent.memory_manager.on_session_end",
+          "write_path": "memory_provider_session_state",
+          "requested_tier": "mnemosyne_session"
+        }
+      },
+      "expected_tier": "mnemosyne_session",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
+    },
+    {
+      "name": "phase4 skill patch write intent stays advisory",
+      "live_write_intent": true,
+      "request": {
+        "text": "Reusable workflow checklist for memory routing should become a skill patch.",
+        "source": "skill_manage",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "tools.skill_manager_tool.skill_manage",
+          "write_path": "skill_patch",
+          "requested_tier": "skill_patch",
+          "action": "patch"
+        }
+      },
+      "expected_tier": "skill_patch",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
+    },
+    {
+      "name": "phase4 project artifact write intent stays advisory",
+      "live_write_intent": true,
+      "request": {
+        "text": "Update README and pyproject.toml in the project repo.",
+        "source": "file_tool",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "tools.file_tools.write_file_tool",
+          "write_path": "project_artifact",
+          "requested_tier": "project_artifact"
+        }
+      },
+      "expected_tier": "project_artifact",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
+    },
+    {
+      "name": "phase4 clean-field write intent requires approval and no mutation",
+      "live_write_intent": true,
+      "request": {
+        "text": "Use this old campaign detail for Quill marketing memory.",
+        "source": "memory_tool",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "tools.memory_tool.memory_tool",
+          "write_path": "builtin_memory_tool",
+          "requested_tier": "user_memory"
+        }
+      },
+      "expected_tier": "no_write_clean_field_boundary",
+      "expected_blocked": false,
+      "expected_enforced": false,
+      "expected_enforcement_action": "advisory_only",
+      "expected_dry_run": true,
+      "expected_would_mutate": false,
+      "expected_approval_required": true
+    },
+    {
+      "name": "phase4 session-search-only write intent blocks durable write",
+      "live_write_intent": true,
+      "request": {
+        "text": "Fixed bug X, submitted PR #123, and completed Phase 4 today.",
+        "source": "memory_tool",
+        "dry_run": false,
+        "metadata": {
+          "live_write_intent": true,
+          "entrypoint": "tools.memory_tool.memory_tool",
+          "write_path": "builtin_memory_tool",
+          "requested_tier": "memory"
+        }
+      },
+      "expected_tier": "session_search_only",
+      "expected_blocked": true,
+      "expected_enforced": true,
+      "expected_enforcement_action": "block_durable_write",
+      "expected_dry_run": false,
+      "expected_would_mutate": false,
+      "expected_approval_required": false
     }
   ]
 }

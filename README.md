@@ -8,9 +8,9 @@ It does not store memory. It decides where a proposed memory write *should* go a
 
 ## Status
 
-GitHub-installable plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts.
+GitHub-installable plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts, plus Phase 4 live-write-interception planning/harness coverage.
 
-The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. It also blocks attempts to force stale PR, issue, phase, or completed-task logs into `user_memory`. Durable user preferences remain advisory and non-writing. All other tiers remain advisory/dry-run until separately approved.
+The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. It also blocks attempts to force stale PR, issue, phase, or completed-task logs into `user_memory`. Durable user preferences, Mnemosyne global/session candidates, skill patches, project artifacts, and clean-field approval gates remain advisory and non-writing. Phase 4 adds mapped Hermes write entrypoints and evaluator scenarios for live-write intent without wiring any live interceptor.
 
 This plugin does not mutate Hermes core, credentials, providers, gateway, config, Mnemosyne, skills, or existing memory.
 
@@ -67,7 +67,19 @@ The tool accepts text/context/source/metadata and returns a JSON decision.
 PYTHONPATH=src python3 -m hermes_memory_policy_gate scenarios/memory_routing_cases.json --json
 ```
 
-The seed scenarios include non-dry-run returned-block cases, so `dry_run_only=false` is expected; `live_writes=false` must remain true.
+The seed scenarios include non-dry-run returned-block cases and Phase 4 live-write-intent harness cases, so `dry_run_only=false` is expected; `live_writes=false` must remain true.
+
+## Phase 4 live-write-interception map
+
+Phase 4 mapped Hermes write entrypoints without changing Hermes core:
+
+- built-in curated memory: `tools/memory_tool.py::memory_tool` and `MemoryStore` write methods
+- provider/Mnemosyne-style paths: `MemoryManager.sync_all`, `on_session_end`, `on_pre_compress`, `on_memory_write`, and provider hooks
+- procedural memory: `tools/skill_manager_tool.py` create/edit/patch/delete/supporting-file paths
+- project artifacts: `tools/file_tools.py::write_file_tool` and `patch_tool`
+- transcript recall: `tools/session_search_tool.py::session_search` as the read-only route for ephemeral task progress
+
+Details are in `docs/phase4-live-write-entrypoints.md`.
 
 ## Development
 
@@ -86,4 +98,4 @@ PYTHONPATH=src python3 -m pytest tests -q
 
 This is an evaluator and router. It is not a writer.
 
-`session_search_only` decisions can enforce a no-write block when `dry_run=false`; user-memory boundary attempts can return `block_user_memory_write` when stale task-progress content is being forced into `user_memory`. Both are returned decision contracts, not writers. Every other tier remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.
+`session_search_only` decisions can enforce a no-write block when `dry_run=false`; user-memory boundary attempts can return `block_user_memory_write` when stale task-progress content is being forced into `user_memory`. Phase 4 live-write-intent scenarios still report `would_mutate=false` and evaluator `live_writes=false`. Every tier other than the returned-block cases remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.

@@ -2,7 +2,7 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 Lane: Hermes/Archimedes memory hygiene plugin
-Status: GitHub-published plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts; local source clone is the active implementation workspace
+Status: GitHub-published plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts; Phase 4 planning/harness pass in local workspace
 
 ## Source of truth
 
@@ -16,7 +16,7 @@ Status: GitHub-published plugin with narrow returned-block enforcement for `sess
 
 ## Objective
 
-Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, blocks attempts to force stale task-progress content into `user_memory`, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, or project files.
+Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, blocks attempts to force stale task-progress content into `user_memory`, maps Hermes live write entrypoints for Phase 4 harness coverage, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, skills, or project files outside this plugin repo.
 
 ## MemSkill stance
 
@@ -30,7 +30,8 @@ This project takes precedence as the Hermes memory-policy implementation lane. M
 - Deterministic policy engine
 - Narrow no-write enforcement contract for `session_search_only`
 - Narrow user-memory boundary contract for stale task-progress write attempts
-- Offline evaluator against canned scenarios
+- Offline evaluator against canned scenarios, including Phase 4 live-write-intent harness cases
+- Phase 4 entrypoint map: `docs/phase4-live-write-entrypoints.md`
 - Tests for policy routing, evaluator, manifest, and plugin registration shape
 - README, license, after-install note, CI scaffold
 
@@ -64,6 +65,18 @@ Allowed tiers:
 - `superseded_update`
 - `noisy_memory_invalidation`
 
+## Phase 4 mapped live write entrypoints
+
+Read-only source mapping from `/Users/manisaintvictor/.hermes/hermes-agent` identified the live write surfaces a future interceptor would need to guard:
+
+- built-in curated memory: `tools/memory_tool.py::memory_tool`, `MemoryStore.add`, `replace`, `remove`, and `_write_file`
+- memory provider/Mnemosyne-style lifecycle: `MemoryManager.sync_all`, `on_session_end`, `on_pre_compress`, `on_memory_write`, and provider hooks in `agent/memory_provider.py`
+- skill/procedural memory: `tools/skill_manager_tool.py` create/edit/patch/delete/supporting-file paths
+- project artifacts: `tools/file_tools.py::write_file_tool` and `patch_tool`
+- transcript recall fallback: `tools/session_search_tool.py::session_search`
+
+The map is documented in `docs/phase4-live-write-entrypoints.md`. Current harness coverage models these as live-write-intent metadata only; it does not wire or mutate the Hermes source checkout.
+
 ## Forbidden without separate approval
 
 - No Hermes core mutation
@@ -86,9 +99,11 @@ Allowed tiers:
 
 ## Next implementation phase
 
-1. Add more scenario coverage from real Hermes/Archimedes memory-routing failures.
-2. Add optional JSONL audit log output, still local-only and opt-in.
-3. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
-4. Reload or restart Hermes only after explicit approval if live tool surfaces must pick up the new schema.
-5. Keep GitHub install docs current with the plugin manifest and CLI behavior.
-6. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.
+1. Review the Phase 4 entrypoint map and decide which single Hermes write surface should get the first live interceptor design.
+2. Draft a Phase 5 integration plan for that one surface only, including caller-side behavior when `blocked=true` or `approval_required=true`.
+3. Keep actual writes disabled until a separate approval authorizes Hermes core wiring for a named entrypoint.
+4. Add optional JSONL audit log output, still local-only and opt-in.
+5. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
+6. Reload or restart Hermes only after explicit approval if live tool surfaces must pick up a new schema.
+7. Keep GitHub install docs current with the plugin manifest and CLI behavior.
+8. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.

@@ -25,12 +25,20 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
             "blocked": "expected_blocked",
             "enforced": "expected_enforced",
             "enforcement_action": "expected_enforcement_action",
+            "dry_run": "expected_dry_run",
+            "would_mutate": "expected_would_mutate",
+            "approval_required": "expected_approval_required",
         }
         for field, expected_key in optional_expectations.items():
             if expected_key in case:
                 checks[field] = decision[field] == case[expected_key]
         ok = all(checks.values())
         passed += int(ok)
+        live_write_intent = bool(
+            case.get("live_write_intent")
+            or decision.get("dry_run") is False
+            or case.get("request", case).get("metadata", {}).get("live_write_intent")
+        )
         results.append({
             "name": case.get("name", "unnamed"),
             "ok": ok,
@@ -38,11 +46,13 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
             "actual_tier": decision["tier"],
             "confidence": decision["confidence"],
             "reason_codes": decision["reason_codes"],
+            "approval_required": decision["approval_required"],
             "dry_run": decision["dry_run"],
             "would_mutate": decision["would_mutate"],
             "blocked": decision["blocked"],
             "enforced": decision["enforced"],
             "enforcement_action": decision["enforcement_action"],
+            "live_write_intent": live_write_intent,
             "checks": checks,
         })
     return {
@@ -52,6 +62,9 @@ def evaluate_cases(path: str | Path) -> dict[str, Any]:
         "total": len(results),
         "results": results,
         "live_writes": False,
+        "live_write_intents": sum(1 for item in results if item["live_write_intent"]),
+        "blocked_write_intents": sum(1 for item in results if item["live_write_intent"] and item["blocked"]),
+        "advisory_write_intents": sum(1 for item in results if item["live_write_intent"] and not item["blocked"]),
         "dry_run_only": dry_run_only,
     }
 
