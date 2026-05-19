@@ -49,6 +49,9 @@ class MemoryPolicyDecision:
     verification_step: str
     dry_run: bool = True
     would_mutate: bool = False
+    blocked: bool = False
+    enforced: bool = False
+    enforcement_action: str = "advisory_only"
     notes: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:

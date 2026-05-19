@@ -29,6 +29,30 @@ class PolicyTests(unittest.TestCase):
         self.assertIn("ephemeral_task_progress", decision.reason_codes)
         self.assertFalse(decision.would_mutate)
 
+    def test_session_search_only_enforces_durable_write_block_when_not_dry_run(self):
+        decision = decide_memory_policy({
+            "text": "Fixed bug X, submitted PR #123, and completed Phase 4 today.",
+            "dry_run": False,
+        })
+        self.assertEqual(decision.tier, TargetTier.SESSION_SEARCH_ONLY)
+        self.assertFalse(decision.dry_run)
+        self.assertFalse(decision.would_mutate)
+        self.assertTrue(decision.blocked)
+        self.assertTrue(decision.enforced)
+        self.assertEqual(decision.enforcement_action, "block_durable_write")
+
+    def test_non_session_search_tiers_remain_advisory_when_not_dry_run(self):
+        decision = decide_memory_policy({
+            "text": "I prefer concise status reports.",
+            "dry_run": False,
+        })
+        self.assertEqual(decision.tier, TargetTier.USER_MEMORY)
+        self.assertTrue(decision.dry_run)
+        self.assertFalse(decision.would_mutate)
+        self.assertFalse(decision.blocked)
+        self.assertFalse(decision.enforced)
+        self.assertEqual(decision.enforcement_action, "advisory_only")
+
 
 if __name__ == "__main__":
     unittest.main()

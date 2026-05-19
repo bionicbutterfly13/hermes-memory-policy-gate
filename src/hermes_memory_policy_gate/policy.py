@@ -22,6 +22,45 @@ def _is_noise(text: str) -> bool:
     return any(re.match(pat, text, flags=re.IGNORECASE) for pat in _NOISE_PATTERNS)
 
 
+def _session_search_decision(
+    request: MemoryPolicyRequest,
+    *,
+    confidence: float,
+    reason_codes: list[str],
+    source: str,
+    provenance: str,
+    verification_step: str,
+    notes: list[str],
+) -> MemoryPolicyDecision:
+    """Return the only phase-2 enforced decision: block durable writes.
+
+    Non-dry-run requests are honored only for session_search_only routes. The
+    gate still performs no writes; it returns a blocking decision that callers
+    can use to prevent a durable memory mutation.
+    """
+    enforce = not request.dry_run
+    if enforce:
+        notes = [
+            *notes,
+            "Enforced no-write: blocked durable memory mutation; transcript/session_search remains available.",
+        ]
+    return MemoryPolicyDecision(
+        tier=TargetTier.SESSION_SEARCH_ONLY,
+        confidence=confidence,
+        reason_codes=reason_codes,
+        source=source,
+        provenance=provenance,
+        approval_required=False,
+        verification_step=verification_step,
+        dry_run=request.dry_run,
+        would_mutate=False,
+        blocked=enforce,
+        enforced=enforce,
+        enforcement_action="block_durable_write" if enforce else "advisory_only",
+        notes=notes,
+    )
+
+
 def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> MemoryPolicyDecision:
     """Return an auditable dry-run memory routing decision.
 
@@ -39,17 +78,14 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
     notes: list[str] = []
 
     if not text:
-        return MemoryPolicyDecision(
-            tier=TargetTier.SESSION_SEARCH_ONLY,
+        return _session_search_decision(
+            request,
             confidence=0.35,
             reason_codes=[rc.LOW_SIGNAL],
             source=source,
             provenance=provenance,
-            approval_required=False,
             verification_step="No memory write: empty/low-signal input.",
-            dry_run=True,
-            would_mutate=False,
-            notes=["Phase 1 is advisory only."],
+            notes=["Low-signal input should not become durable memory."],
         )
 
     clean_field_terms = ["clean-field", "clean field", "quill", "marketing", "campaign", "old avatar", "old campaign"]
@@ -112,16 +148,13 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
         )
 
     if _is_noise(text):
-        return MemoryPolicyDecision(
-            tier=TargetTier.SESSION_SEARCH_ONLY,
+        return _session_search_decision(
+            request,
             confidence=0.91,
             reason_codes=[rc.CONVERSATIONAL_NOISE],
             source=source,
             provenance=provenance,
-            approval_required=False,
             verification_step="No durable write; transcript/session search is sufficient.",
-            dry_run=True,
-            would_mutate=False,
             notes=["Conversational acknowledgement only."],
         )
 
@@ -168,16 +201,13 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
         "completed task",
         "finished task",
     ]):
-        return MemoryPolicyDecision(
-            tier=TargetTier.SESSION_SEARCH_ONLY,
+        return _session_search_decision(
+            request,
             confidence=0.87,
             reason_codes=[rc.EPHEMERAL_TASK_PROGRESS],
             source=source,
             provenance=provenance,
-            approval_required=False,
             verification_step="Do not write completed task logs to durable memory; use transcript/session_search unless explicitly promoted to a project artifact.",
-            dry_run=True,
-            would_mutate=False,
             notes=["Completed work logs and PR/phase updates are stale quickly."],
         )
 
@@ -209,15 +239,12 @@ def decide_memory_policy(request: MemoryPolicyRequest | Mapping[str, Any]) -> Me
             notes=["Use global memory only for durable cross-session facts."],
         )
 
-    return MemoryPolicyDecision(
-        tier=TargetTier.SESSION_SEARCH_ONLY,
+    return _session_search_decision(
+        request,
         confidence=0.55,
         reason_codes=[rc.DEFAULT_SHADOW_ROUTE],
         source=source,
         provenance=provenance,
-        approval_required=False,
         verification_step="Do not write durable memory by default; rely on transcript/session_search unless promoted by review.",
-        dry_run=True,
-        would_mutate=False,
-        notes=["Default phase-1 posture is conservative."],
+        notes=["Default posture is conservative."],
     )
