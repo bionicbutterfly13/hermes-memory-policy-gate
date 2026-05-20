@@ -89,7 +89,7 @@ For every live-write-intent scenario in this phase:
 - `session_search_only` durable-write attempts may be enforced as returned blocks only.
 - User-memory attempts containing stale task progress may be enforced as returned blocks only.
 
-## Out of scope until a separately approved Phase 5
+## Still out of scope after Phase 5 unless separately approved
 
 - Modifying Hermes core dispatch paths.
 - Wrapping `memory_tool`, `MemoryManager`, provider hooks, `skill_manage`, `write_file`, or `patch` with a live policy interceptor.

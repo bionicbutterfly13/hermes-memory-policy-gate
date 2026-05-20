@@ -31,7 +31,7 @@ def register(ctx) -> None:
                     "source": {"type": "string", "description": "Where the candidate came from."},
                     "context": {"type": "string", "description": "Optional lane/task context."},
                     "provenance": {"type": "string", "description": "Source id, file path, session id, or artifact pointer."},
-                    "dry_run": {"type": "boolean", "default": True, "description": "Always treated as true in phase 1."},
+                    "dry_run": {"type": "boolean", "default": True, "description": "When false, the gate may return a no-write block decision; the plugin still performs no writes."},
                     "metadata": {"type": "object", "description": "Optional structured hints."},
                 },
                 "required": ["text"],

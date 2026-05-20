@@ -8,9 +8,9 @@ It does not store memory. It decides where a proposed memory write *should* go a
 
 ## Status
 
-GitHub-installable plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts, plus Phase 4 live-write-interception planning/harness coverage.
+GitHub-installable plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts, Phase 4 live-write-interception planning/harness coverage, and a Phase 5 non-writing caller contract for the built-in `memory_tool` surface.
 
-The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. It also blocks attempts to force stale PR, issue, phase, or completed-task logs into `user_memory`. Durable user preferences, Mnemosyne global/session candidates, skill patches, project artifacts, and clean-field approval gates remain advisory and non-writing. Phase 4 adds mapped Hermes write entrypoints and evaluator scenarios for live-write intent without wiring any live interceptor.
+The current enforcement contract blocks attempted durable-memory writes for ephemeral task progress when callers explicitly request non-dry-run evaluation. It also blocks attempts to force stale PR, issue, phase, or completed-task logs into `user_memory`. Durable user preferences, Mnemosyne global/session candidates, skill patches, project artifacts, and clean-field approval gates remain advisory and non-writing. Phase 4 adds mapped Hermes write entrypoints and evaluator scenarios for live-write intent without wiring any live interceptor. Phase 5 selects only `tools.memory_tool.memory_tool` and defines caller-side behavior for `blocked=true`, `approval_required=true`, and advisory passthrough without editing Hermes core.
 
 This plugin does not mutate Hermes core, credentials, providers, gateway, config, Mnemosyne, skills, or existing memory.
 
@@ -81,6 +81,28 @@ Phase 4 mapped Hermes write entrypoints without changing Hermes core:
 
 Details are in `docs/phase4-live-write-entrypoints.md`.
 
+## Phase 5 memory-tool caller contract
+
+Phase 5 chooses one write surface only: the built-in curated memory tool.
+
+```python
+from hermes_memory_policy_gate import plan_memory_tool_call
+
+plan = plan_memory_tool_call({
+    "action": "add",
+    "target": "user",
+    "content": "Remember that I submitted PR #123 and completed Phase 4 today.",
+})
+```
+
+The returned `MemoryToolCallerPlan` is non-writing:
+
+- `blocked=true` -> `caller_action=block_original_memory_write`, `call_original=false`
+- `approval_required=true` -> `caller_action=require_explicit_approval`, `call_original=false`
+- advisory decision -> `caller_action=advisory_passthrough`, `call_original=true`
+
+Details are in `docs/phase5-memory-tool-caller-contract.md`.
+
 ## Development
 
 ```bash
@@ -98,4 +120,4 @@ PYTHONPATH=src python3 -m pytest tests -q
 
 This is an evaluator and router. It is not a writer.
 
-`session_search_only` decisions can enforce a no-write block when `dry_run=false`; user-memory boundary attempts can return `block_user_memory_write` when stale task-progress content is being forced into `user_memory`. Phase 4 live-write-intent scenarios still report `would_mutate=false` and evaluator `live_writes=false`. Every tier other than the returned-block cases remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.
+`session_search_only` decisions can enforce a no-write block when `dry_run=false`; user-memory boundary attempts can return `block_user_memory_write` when stale task-progress content is being forced into `user_memory`. Phase 4 live-write-intent scenarios still report `would_mutate=false` and evaluator `live_writes=false`. Phase 5 adds a non-writing `memory_tool` caller plan that tells a future interceptor whether to block, hold for approval, or pass through; it does not wire that interceptor. Every tier other than the returned-block cases remains advisory/dry-run until a future explicitly approved integration phase wires decisions into live Hermes write paths.

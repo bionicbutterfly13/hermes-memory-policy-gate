@@ -2,7 +2,7 @@
 
 Author: Mani Saint-Victor, MD / bionicbutterfly13
 Lane: Hermes/Archimedes memory hygiene plugin
-Status: GitHub-published plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts; Phase 4 planning/harness pass in local workspace
+Status: GitHub-published plugin with narrow returned-block enforcement for `session_search_only` and user-memory boundary attempts; Phase 5 memory-tool caller contract in local workspace
 
 ## Source of truth
 
@@ -16,7 +16,7 @@ Status: GitHub-published plugin with narrow returned-block enforcement for `sess
 
 ## Objective
 
-Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, blocks attempts to force stale task-progress content into `user_memory`, maps Hermes live write entrypoints for Phase 4 harness coverage, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, skills, or project files outside this plugin repo.
+Build a GitHub-installable Hermes plugin and PyPI-ready Python package that classifies proposed memory writes before mutation. The current plugin returns auditable routing decisions, blocks attempted durable writes for `session_search_only` when non-dry-run evaluation is explicitly requested, blocks attempts to force stale task-progress content into `user_memory`, maps Hermes live write entrypoints for Phase 4 harness coverage, defines a Phase 5 non-writing caller contract for the built-in `memory_tool` surface, and never writes to Hermes memory, Mnemosyne, config, providers, gateway, skills, or project files outside this plugin repo.
 
 ## MemSkill stance
 
@@ -32,7 +32,9 @@ This project takes precedence as the Hermes memory-policy implementation lane. M
 - Narrow user-memory boundary contract for stale task-progress write attempts
 - Offline evaluator against canned scenarios, including Phase 4 live-write-intent harness cases
 - Phase 4 entrypoint map: `docs/phase4-live-write-entrypoints.md`
-- Tests for policy routing, evaluator, manifest, and plugin registration shape
+- Phase 5 built-in memory-tool caller contract: `docs/phase5-memory-tool-caller-contract.md`
+- Non-writing `memory_tool_contract.py` planner for `blocked=true`, `approval_required=true`, and advisory passthrough behavior
+- Tests for policy routing, evaluator, manifest, plugin registration shape, and Phase 5 caller contract
 - README, license, after-install note, CI scaffold
 
 ## Policy output contract
@@ -77,6 +79,24 @@ Read-only source mapping from `/Users/manisaintvictor/.hermes/hermes-agent` iden
 
 The map is documented in `docs/phase4-live-write-entrypoints.md`. Current harness coverage models these as live-write-intent metadata only; it does not wire or mutate the Hermes source checkout.
 
+## Phase 5 selected caller contract
+
+Phase 5 selects the built-in curated memory surface only:
+
+- surface: `memory_tool`
+- entrypoint: `tools.memory_tool.memory_tool`
+- write path: `builtin_memory_tool`
+- contract module: `src/hermes_memory_policy_gate/memory_tool_contract.py`
+- documentation: `docs/phase5-memory-tool-caller-contract.md`
+
+The caller contract returns a non-writing `MemoryToolCallerPlan`:
+
+- `blocked=true` -> `caller_action=block_original_memory_write`, `call_original=false`
+- `approval_required=true` -> `caller_action=require_explicit_approval`, `call_original=false`
+- advisory decision -> `caller_action=advisory_passthrough`, `call_original=true`
+
+This is not Hermes core wiring. The contract does not import or call `tools.memory_tool`, does not touch `MemoryStore`, and does not write `USER.md` or `MEMORY.md`.
+
 ## Forbidden without separate approval
 
 - No Hermes core mutation
@@ -99,11 +119,12 @@ The map is documented in `docs/phase4-live-write-entrypoints.md`. Current harnes
 
 ## Next implementation phase
 
-1. Review the Phase 4 entrypoint map and decide which single Hermes write surface should get the first live interceptor design.
-2. Draft a Phase 5 integration plan for that one surface only, including caller-side behavior when `blocked=true` or `approval_required=true`.
-3. Keep actual writes disabled until a separate approval authorizes Hermes core wiring for a named entrypoint.
-4. Add optional JSONL audit log output, still local-only and opt-in.
-5. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
-6. Reload or restart Hermes only after explicit approval if live tool surfaces must pick up a new schema.
-7. Keep GitHub install docs current with the plugin manifest and CLI behavior.
-8. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.
+1. Review Phase 5 caller-contract results and decide whether to approve a separate Hermes-core integration track for `tools.memory_tool.memory_tool` only.
+2. If approved later, add core RED tests in `/Users/manisaintvictor/.hermes/hermes-agent` before wiring any live interceptor.
+3. Keep actual writes disabled in this plugin; the plugin remains a decision/contract package, not a writer.
+4. Do not expand Phase 5 behavior to Mnemosyne, skill patches, project artifacts, provider lifecycle hooks, gateway, or config without a separate named approval.
+5. Add optional JSONL audit log output, still local-only and opt-in.
+6. Add install smoke against a disposable `HERMES_HOME` before any release-tag workflow.
+7. Reload or restart Hermes only after explicit approval if live tool surfaces must pick up a new schema.
+8. Keep GitHub install docs current with the plugin manifest and CLI behavior.
+9. Only after stable GitHub plugin behavior: decide whether to publish a PyPI package.
